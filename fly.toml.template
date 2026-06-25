@@ -1,0 +1,21 @@
+# Template for the Fly app config. scripts/02_deploy_fly.sh substitutes the app
+# name + region and writes fly.generated.toml (gitignored), so per-student app
+# names are never committed.
+app = "__COMPOSE_APP__"
+primary_region = "__FLY_REGION__"
+
+# Multi-container Machine: build + run the topology in docker-compose.fly.yml.
+[build.compose]
+  file = "docker-compose.fly.yml"
+
+# Only the public API (port 8000) is exposed to the internet.
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

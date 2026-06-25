@@ -1,0 +1,33 @@
+# Template for the Fly Compose file. scripts/02_deploy_fly.sh substitutes
+# __CLASSIFIER_IMAGE__ and writes docker-compose.fly.yml (gitignored).
+#
+# On Fly the three containers share one Machine and one network namespace, so
+# the API reaches the sidecars over localhost (not service DNS). The buildable
+# `api` service uses the repo-root build context, which Fly Compose requires.
+services:
+  api:
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    environment:
+      APP_PORT: "8000"
+      CLASSIFIER_URL: http://localhost:8001
+      DATABASE_URL: postgresql://app:app@localhost:5432/app
+      REQUEST_TIMEOUT_SECONDS: "2.0"
+      DB_CONNECT_RETRIES: "45"
+      DB_CONNECT_SLEEP_SECONDS: "1.0"
+
+  classifier:
+    image: __CLASSIFIER_IMAGE__
+    environment:
+      APP_PORT: "8001"
+      MODEL_NAME: human-or-bot-rules
+      MODEL_VERSION: fly-sidecar-v1
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app

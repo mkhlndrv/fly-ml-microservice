@@ -1,0 +1,40 @@
+# Local development topology: same three services as on Fly, wired by service
+# name. Run it with ./scripts/00_run_local.sh (or docker compose up --build).
+services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d app"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  classifier:
+    build: ./classifier_service
+    ports:
+      - "8014:8001"
+    environment:
+      APP_PORT: "8001"
+      MODEL_NAME: human-or-bot-rules
+      MODEL_VERSION: local-sidecar-v1
+
+  api:
+    build: ./api_service
+    depends_on:
+      classifier:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8013:8000"
+    environment:
+      APP_PORT: "8000"
+      CLASSIFIER_URL: http://classifier:8001
+      DATABASE_URL: postgresql://app:app@postgres:5432/app
+      REQUEST_TIMEOUT_SECONDS: "2.0"

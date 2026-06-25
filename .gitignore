@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+.env
+
+# Generated at deploy time from the templates (contain per-student app names).
+fly.generated.toml
+docker-compose.fly.yml
+
+# Fly local state
+.fly/
